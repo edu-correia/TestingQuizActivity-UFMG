@@ -154,3 +154,55 @@ def test_add_choice_with_invalid_text_raises_exception():
     long_text = 'a' * 101
     with pytest.raises(Exception, match='Text cannot be longer than 100 characters'):
         question.add_choice(long_text)
+
+@pytest.fixture
+def question_with_choices():
+    """
+    Fixture que cria uma questão com 4 alternativas, onde duas são corretas (B e D).
+    Esta questão permite múltiplas seleções (até 2).
+    """
+    question = Question(
+        title='Quais das seguintes linguagens são tipadas estaticamente?',
+        points=10,
+        max_selections=2
+    )
+    # Adicionando alternativas
+    question.add_choice('Python')    # ID 1
+    question.add_choice('Java')      # ID 2
+    question.add_choice('JavaScript')# ID 3
+    question.add_choice('TypeScript')# ID 4
+
+    # Definindo as alternativas corretas (Java e TypeScript)
+    question.set_correct_choices([2, 4])
+    return question
+
+def test_correct_selection_with_both_correct_answers(question_with_choices):
+    """
+    Utiliza a fixture para testar o cenário em que o usuário seleciona
+    exatamente as duas respostas corretas.
+    """
+    # A questão é fornecida pela fixture `question_with_choices`
+    # As respostas corretas são 2 (Java) e 4 (TypeScript)
+    selected_ids = [2, 4]
+    
+    correctly_selected = question_with_choices.correct_selected_choices(selected_ids)
+    
+    # O resultado deve conter os mesmos IDs, pois ambos estão corretos.
+    # Usamos sorted() para garantir que a ordem não afete o teste.
+    assert len(correctly_selected) == 2
+    assert sorted(correctly_selected) == sorted(selected_ids)
+
+def test_correct_selection_with_one_correct_and_one_incorrect(question_with_choices):
+    """
+    Utiliza a fixture para testar o cenário em que o usuário seleciona
+    uma resposta correta e uma incorreta.
+    """
+    # A questão é fornecida pela fixture `question_with_choices`
+    # Selecionamos uma correta (ID 2) e uma incorreta (ID 1)
+    selected_ids = [1, 2] # Python (incorreto), Java (correto)
+
+    correctly_selected = question_with_choices.correct_selected_choices(selected_ids)
+
+    # O resultado deve conter apenas o ID da resposta correta que foi selecionada.
+    assert len(correctly_selected) == 1
+    assert correctly_selected == [2]
